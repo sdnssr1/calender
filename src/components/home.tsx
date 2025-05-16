@@ -1,24 +1,13 @@
-import { Calendar, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import type { Event } from "../types/events";
 import CalendarGrid from "./CalendarGrid";
 import CalendarRightSidebar from "./CalendarRightSidebar";
-import DeadlineSidebar from "./DeadlineSidebar";
 import EventModal from "./EventModal";
 import { Button } from "./ui/button";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 type ViewType = "day" | "week" | "month";
-
-type Event = {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  courseCategory: string;
-  priority: "low" | "medium" | "high";
-  description?: string;
-  color?: string;
-};
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<ViewType>("week");
@@ -178,12 +167,13 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* New div added as requested */}
+    <div className="flex flex-col h-screen">
+      {/* Welcome Banner */}
       <div className="bg-blue-100 p-4 text-blue-800 text-center font-medium border-b border-blue-200">
         Welcome to the Student Calendar Dashboard
       </div>
-      {/* Header - Fixed the spacing and layout */}
+
+      {/* Header */}
       <header className="border-b p-4 bg-card shadow-sm">
         <div className="container mx-auto flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
           <div className="flex items-center gap-3">
@@ -242,22 +232,13 @@ export default function Home() {
               </TabsList>
             </Tabs>
           </div>
-
-          {/* Event button with improved spacing */}
-          <Button
-            onClick={handleCreateEvent}
-            className="flex items-center gap-2 px-4"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Event</span>
-          </Button>
         </div>
       </header>
 
-      {/* Main Content with clear separation */}
-      <div className="flex flex-1 overflow-hidden border-t">
-        {/* Calendar Grid */}
-        <div className="flex-1 overflow-auto">
+      {/* Main Content Area */}
+      <div className="flex-1 flex">
+        {/* Main Calendar Area */}
+        <div className="flex-1 overflow-auto p-4">
           <CalendarGrid
             view={currentView}
             currentDate={currentDate}
@@ -267,33 +248,21 @@ export default function Home() {
           />
         </div>
 
-        {/* Resizable divider */}
-        <div
-          className="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize active:bg-blue-600 transition-colors"
-          onMouseDown={startResizing}
-        />
-
-        {/* Sidebar with resizable width */}
-        <div
-          ref={sidebarRef}
-          className="hidden md:block overflow-auto bg-card shadow-sm border-l"
-          style={{ width: `${sidebarWidth}px` }}
-        >
+        {/* Right Sidebar - Fixed width, always visible */}
+        <aside className="w-[320px] flex-shrink-0 border-l border-gray-200 bg-white shadow-lg">
           <CalendarRightSidebar
             events={events}
             onEventClick={handleEventClick}
             onCreateEvent={handleCreateEvent}
           />
-        </div>
+        </aside>
       </div>
 
       {/* Event Modal */}
       <EventModal
-        isOpen={isEventModalOpen}
-        onClose={() => setIsEventModalOpen(false)}
-        event={selectedEvent}
-        onSave={handleSaveEvent}
-        onDelete={handleDeleteEvent}
+        events={events}
+        onEventClick={handleEventClick}
+        onCreateEvent={handleCreateEvent}
       />
     </div>
   );

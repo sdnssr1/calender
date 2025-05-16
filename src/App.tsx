@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import { useRoutes, Routes, Route } from "react-router-dom";
-import Home from "./components/home";
+import { Route, Routes, useRoutes } from "react-router-dom";
 import routes from "tempo-routes";
+import Home from "./components/home";
 
 function App() {
   return (

@@ -1,9 +1,8 @@
-import React from "react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 
 interface CalendarSidebarProps {
@@ -58,7 +57,15 @@ const SidebarContent = ({ className }: SidebarContentProps) => {
               <div className="h-4 bg-muted/20 rounded-md w-1/2" />
             </div>
           </div>
+          <div className="flex h-screen bg-background">
+              {/* Left Sidebar */}
+              <CalendarSidebar />
 
+              {/* Main Content */}
+              <div className="flex-1 flex flex-col">
+                {/* ...header and calendar content... */}
+              </div>
+            </div>
           <Separator className="my-4" />
 
           {/* Section 2 Placeholder */}
