@@ -1,21 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  Calendar,
-  Clock,
-  Filter,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { Button } from "./ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
-import { Card, CardContent } from "./ui/card";
-import { Separator } from "./ui/separator";
-import CalendarGrid from "./CalendarGrid";
-import DeadlineSidebar from "./DeadlineSidebar";
-import EventModal from "./EventModal";
-
-type ViewType = "day" | "week" | "month";
+import { useState } from "react";
+import { Badge } from "./ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 type Event = {
   id: string;
@@ -28,272 +13,157 @@ type Event = {
   color?: string;
 };
 
-export default function Home() {
-  const [currentView, setCurrentView] = useState<ViewType>("week");
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [isEventModalOpen, setIsEventModalOpen] = useState<boolean>(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [sidebarWidth, setSidebarWidth] = useState<number>(320); // Default width 320px
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const resizingRef = useRef<boolean>(false);
-  const startXRef = useRef<number>(0);
-  const startWidthRef = useRef<number>(0);
+type DeadlineSidebarProps = {
+  events: Event[];
+  onEventClick: (event: Event) => void;
+};
 
-  // Sample events data
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: "1",
-      title: "Math Assignment",
-      start: new Date(new Date().setHours(10, 0)),
-      end: new Date(new Date().setHours(11, 30)),
-      courseCategory: "Mathematics",
-      priority: "high",
-      color: "#4f46e5",
-    },
-    {
-      id: "2",
-      title: "Physics Lab",
-      start: new Date(new Date().setHours(13, 0)),
-      end: new Date(new Date().setHours(15, 0)),
-      courseCategory: "Physics",
-      priority: "medium",
-      color: "#10b981",
-    },
-    {
-      id: "3",
-      title: "Literature Review",
-      start: new Date(new Date().setDate(new Date().getDate() + 1)),
-      end: new Date(new Date().setDate(new Date().getDate() + 1)),
-      courseCategory: "English",
-      priority: "low",
-      color: "#f59e0b",
-    },
-  ]);
+export default function DeadlineSidebar({
+  events,
+  onEventClick,
+}: DeadlineSidebarProps) {
+  const [filter, setFilter] = useState<string>("all");
 
-  const handlePrevious = () => {
-    const newDate = new Date(currentDate);
-    if (currentView === "day") {
-      newDate.setDate(newDate.getDate() - 1);
-    } else if (currentView === "week") {
-      newDate.setDate(newDate.getDate() - 7);
+  // Get the date string for display
+  const getDateString = (date: Date) => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return "Tomorrow";
     } else {
-      newDate.setMonth(newDate.getMonth() - 1);
-    }
-    setCurrentDate(newDate);
-  };
-
-  const handleNext = () => {
-    const newDate = new Date(currentDate);
-    if (currentView === "day") {
-      newDate.setDate(newDate.getDate() + 1);
-    } else if (currentView === "week") {
-      newDate.setDate(newDate.getDate() + 7);
-    } else {
-      newDate.setMonth(newDate.getMonth() + 1);
-    }
-    setCurrentDate(newDate);
-  };
-
-  const handleToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  const handleCreateEvent = () => {
-    setSelectedEvent(null);
-    setIsEventModalOpen(true);
-  };
-
-  const handleEventClick = (event: Event) => {
-    setSelectedEvent(event);
-    setIsEventModalOpen(true);
-  };
-
-  const handleSaveEvent = (event: Event) => {
-    if (selectedEvent) {
-      // Update existing event
-      setEvents(events.map((e) => (e.id === event.id ? event : e)));
-    } else {
-      // Add new event
-      setEvents([...events, { ...event, id: Date.now().toString() }]);
-    }
-    setIsEventModalOpen(false);
-  };
-
-  const handleDeleteEvent = (eventId: string) => {
-    setEvents(events.filter((e) => e.id !== eventId));
-    setIsEventModalOpen(false);
-  };
-
-  const formatDateRange = () => {
-    const options: Intl.DateTimeFormatOptions = {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    };
-
-    if (currentView === "day") {
-      return currentDate.toLocaleDateString(undefined, options);
-    } else if (currentView === "week") {
-      const startOfWeek = new Date(currentDate);
-      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
-
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-      return `${startOfWeek.toLocaleDateString(undefined, { month: "long", day: "numeric" })} - ${endOfWeek.toLocaleDateString(undefined, options)}`;
-    } else {
-      return currentDate.toLocaleDateString(undefined, {
-        month: "long",
-        year: "numeric",
-      });
+      // Calculate days difference
+      const diffTime = date.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return `${diffDays} days`;
     }
   };
 
-  // Handle sidebar resizing
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    resizingRef.current = true;
-    startXRef.current = e.clientX;
-    startWidthRef.current = sidebarWidth;
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResizing);
-    document.body.style.cursor = "col-resize";
-  };
+  // Filter events based on selected tab
+  const filteredEvents = events.filter((event) => {
+    if (filter === "all") {
+      return true;
+    } else if (filter === "assignments") {
+      return event.title.toLowerCase().includes("assignment");
+    } else if (filter === "exams") {
+      return event.title.toLowerCase().includes("exam");
+    } else if (filter === "events") {
+      return !event.title.toLowerCase().includes("assignment") && 
+             !event.title.toLowerCase().includes("exam");
+    }
+    return true;
+  });
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!resizingRef.current) return;
-    const delta = startXRef.current - e.clientX;
-    const newWidth = Math.max(
-      280,
-      Math.min(startWidthRef.current + delta, 500),
-    );
-    setSidebarWidth(newWidth);
-  };
-
-  const stopResizing = () => {
-    resizingRef.current = false;
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", stopResizing);
-    document.body.style.cursor = "default";
-  };
-
-  // Clean up event listeners
-  useEffect(() => {
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", stopResizing);
-    };
-  }, []);
+  // Sort events by date
+  const sortedEvents = [...filteredEvents].sort(
+    (a, b) => a.start.getTime() - b.start.getTime()
+  );
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      {/* Header - Fixed the spacing and layout */}
-      <header className="border-b p-4 bg-card shadow-sm">
-        <div className="container mx-auto flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Canvas Calendar</h1>
-          </div>
-
-          {/* Date navigation section - improved spacing */}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleToday}
-              className="px-4"
-            >
-              Today
-            </Button>
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handlePrevious}
-                className="rounded-r-none"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="px-3 py-1 border-y text-sm font-medium min-w-40 text-center">
-                {formatDateRange()}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleNext}
-                className="rounded-l-none"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Improved tab spacing */}
-            <Tabs
-              value={currentView}
-              onValueChange={(value) => setCurrentView(value as ViewType)}
-              className="ml-2"
-            >
-              <TabsList className="grid grid-cols-3 w-48">
-                <TabsTrigger value="day" className="px-4">
-                  Day
-                </TabsTrigger>
-                <TabsTrigger value="week" className="px-4">
-                  Week
-                </TabsTrigger>
-                <TabsTrigger value="month" className="px-4">
-                  Month
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Event button with improved spacing */}
-          <Button
-            onClick={handleCreateEvent}
-            className="flex items-center gap-2 px-4"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Event</span>
-          </Button>
-        </div>
-      </header>
-
-      {/* Main Content with clear separation */}
-      <div className="flex flex-1 overflow-hidden border-t">
-        {/* Calendar Grid */}
-        <div className="flex-1 overflow-auto">
-          <CalendarGrid
-            view={currentView}
-            currentDate={currentDate}
-            events={events}
-            onEventClick={handleEventClick}
-          />
-        </div>
-
-        {/* Resizable divider */}
-        <div
-          className="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize active:bg-blue-600 transition-colors"
-          onMouseDown={startResizing}
-        />
-
-        {/* Resizable sidebar */}
-        <div
-          ref={sidebarRef}
-          className="hidden md:block overflow-auto bg-card shadow-sm"
-          style={{ width: `${sidebarWidth}px` }}
-        >
-          <DeadlineSidebar events={events} onEventClick={handleEventClick} />
-        </div>
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-bold">Upcoming Deadlines</h2>
+        <Badge variant="outline" className="text-xs">
+          {sortedEvents.length}
+        </Badge>
       </div>
 
-      {/* Event Modal */}
-      <EventModal
-        isOpen={isEventModalOpen}
-        onClose={() => setIsEventModalOpen(false)}
-        event={selectedEvent}
-        onSave={handleSaveEvent}
-        onDelete={handleDeleteEvent}
-      />
+      {/* Improved filter tabs with equal spacing */}
+      <div className="mb-4">
+        <Tabs 
+          value={filter} 
+          onValueChange={setFilter} 
+          className="w-full"
+        >
+          <TabsList className="grid grid-cols-4 w-full h-10">
+            <TabsTrigger 
+              value="all" 
+              className="text-xs sm:text-sm px-1 sm:px-2"
+            >
+              All
+            </TabsTrigger>
+            <TabsTrigger 
+              value="assignments" 
+              className="text-xs sm:text-sm px-1 sm:px-2"
+            >
+              Assignments
+            </TabsTrigger>
+            <TabsTrigger 
+              value="exams" 
+              className="text-xs sm:text-sm px-1 sm:px-2"
+            >
+              Exams
+            </TabsTrigger>
+            <TabsTrigger 
+              value="events" 
+              className="text-xs sm:text-sm px-1 sm:px-2"
+            >
+              Events
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {/* Deadline list */}
+      <div className="space-y-4">
+        {sortedEvents.map((event) => (
+          <div
+            key={event.id}
+            className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => onEventClick(event)}
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-medium">{event.title}</h3>
+                <p className="text-sm text-gray-500">{event.courseCategory}</p>
+              </div>
+              <Badge
+                className={`
+                  ${event.priority === "low" ? "bg-green-100 text-green-800" : ""}
+                  ${event.priority === "medium" ? "bg-amber-100 text-amber-800" : ""}
+                  ${event.priority === "high" ? "bg-red-100 text-red-800" : ""}
+                `}
+              >
+                {event.priority}
+              </Badge>
+            </div>
+            <div className="flex items-center mt-2 text-sm text-gray-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span>
+                {event.start.toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                })}{" "}
+                at {event.start.toLocaleTimeString(undefined, {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+            <div className="mt-2 text-right">
+              <Badge variant="outline" className="bg-gray-50">
+                {getDateString(event.start)}
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

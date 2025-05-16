@@ -1,20 +1,15 @@
-import React, { useState } from "react";
 import {
   Calendar,
-  Clock,
-  Filter,
-  Plus,
   ChevronLeft,
   ChevronRight,
+  Plus
 } from "lucide-react";
-import { Button } from "./ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
-import { Card, CardContent } from "./ui/card";
-import { Separator } from "./ui/separator";
+import React, { useEffect, useRef, useState } from "react";
 import CalendarGrid from "./CalendarGrid";
 import DeadlineSidebar from "./DeadlineSidebar";
 import EventModal from "./EventModal";
-import CalendarSidebar from "./CalendarSidebar";
+import { Button } from "./ui/button";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 type ViewType = "day" | "week" | "month";
 
@@ -34,6 +29,11 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [isEventModalOpen, setIsEventModalOpen] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(320); // Default width 320px
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const resizingRef = useRef<boolean>(false);
+  const startXRef = useRef<number>(0);
+  const startWidthRef = useRef<number>(0);
 
   // Sample events data
   const [events, setEvents] = useState<Event[]>([
@@ -145,6 +145,39 @@ export default function Home() {
     }
   };
 
+  // Handle sidebar resizing
+  const startResizing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = true;
+    startXRef.current = e.clientX;
+    startWidthRef.current = sidebarWidth;
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", stopResizing);
+    document.body.style.cursor = "col-resize";
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!resizingRef.current) return;
+    const delta = startXRef.current - e.clientX;
+    const newWidth = Math.max(280, Math.min(startWidthRef.current + delta, 500));
+    setSidebarWidth(newWidth);
+  };
+
+  const stopResizing = () => {
+    resizingRef.current = false;
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", stopResizing);
+    document.body.style.cursor = "default";
+  };
+
+  // Clean up event listeners
+  useEffect(() => {
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", stopResizing);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header - Fixed the spacing and layout */}
@@ -157,36 +190,21 @@ export default function Home() {
 
           {/* Date navigation section - improved spacing */}
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleToday}
-              className="px-4"
-            >
+            <Button variant="outline" size="sm" onClick={handleToday} className="px-4">
               Today
             </Button>
             <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handlePrevious}
-                className="rounded-r-none"
-              >
+              <Button variant="ghost" size="icon" onClick={handlePrevious} className="rounded-r-none">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <div className="px-3 py-1 border-y text-sm font-medium min-w-40 text-center">
                 {formatDateRange()}
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleNext}
-                className="rounded-l-none"
-              >
+              <Button variant="ghost" size="icon" onClick={handleNext} className="rounded-l-none">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-
+            
             {/* Improved tab spacing */}
             <Tabs
               value={currentView}
@@ -194,15 +212,9 @@ export default function Home() {
               className="ml-2"
             >
               <TabsList className="grid grid-cols-3 w-48">
-                <TabsTrigger value="day" className="px-4">
-                  Day
-                </TabsTrigger>
-                <TabsTrigger value="week" className="px-4">
-                  Week
-                </TabsTrigger>
-                <TabsTrigger value="month" className="px-4">
-                  Month
-                </TabsTrigger>
+                <TabsTrigger value="day" className="px-4">Day</TabsTrigger>
+                <TabsTrigger value="week" className="px-4">Week</TabsTrigger>
+                <TabsTrigger value="month" className="px-4">Month</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -230,8 +242,18 @@ export default function Home() {
           />
         </div>
 
-        {/* Sidebar with improved styling */}
-        <div className="hidden md:block w-80 border-l overflow-auto bg-card shadow-sm">
+        {/* Resizable divider */}
+        <div 
+          className="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize active:bg-blue-600 transition-colors"
+          onMouseDown={startResizing}
+        />
+
+        {/* Sidebar with resizable width */}
+        <div 
+          ref={sidebarRef}
+          className="hidden md:block overflow-auto bg-card shadow-sm"
+          style={{ width: `${sidebarWidth}px` }}
+        >
           <DeadlineSidebar events={events} onEventClick={handleEventClick} />
         </div>
       </div>
