@@ -57,15 +57,14 @@ const SidebarContent = ({ className }: SidebarContentProps) => {
               <div className="h-4 bg-muted/20 rounded-md w-1/2" />
             </div>
           </div>
-          <div className="flex h-screen bg-background">
-              {/* Left Sidebar */}
-              <CalendarSidebar />
-
-              {/* Main Content */}
-              <div className="flex-1 flex flex-col">
-                {/* ...header and calendar content... */}
-              </div>
+          {/* Calendar Content Placeholder */}
+          <div className="rounded-md border border-stroke p-4 mb-2">
+            <div className="h-8 mb-2 bg-muted/20 rounded-md" />
+            <div className="space-y-2">
+              <div className="h-4 bg-muted/20 rounded-md w-full" />
+              <div className="h-4 bg-muted/20 rounded-md w-2/3" />
             </div>
+          </div>
           <Separator className="my-4" />
 
           {/* Section 2 Placeholder */}
