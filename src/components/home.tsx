@@ -179,6 +179,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
+      {/* New div added as requested */}
+      <div className="bg-blue-100 p-4 text-blue-800 text-center font-medium border-b border-blue-200">
+        Welcome to the Student Calendar Dashboard
+      </div>
       {/* Header - Fixed the spacing and layout */}
       <header className="border-b p-4 bg-card shadow-sm">
         <div className="container mx-auto flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
