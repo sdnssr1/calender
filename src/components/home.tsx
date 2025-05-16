@@ -1,11 +1,7 @@
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Plus
-} from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import CalendarGrid from "./CalendarGrid";
+import CalendarRightSidebar from "./CalendarRightSidebar";
 import DeadlineSidebar from "./DeadlineSidebar";
 import EventModal from "./EventModal";
 import { Button } from "./ui/button";
@@ -159,7 +155,10 @@ export default function Home() {
   const handleMouseMove = (e: MouseEvent) => {
     if (!resizingRef.current) return;
     const delta = startXRef.current - e.clientX;
-    const newWidth = Math.max(280, Math.min(startWidthRef.current + delta, 500));
+    const newWidth = Math.max(
+      280,
+      Math.min(startWidthRef.current + delta, 500),
+    );
     setSidebarWidth(newWidth);
   };
 
@@ -180,6 +179,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
+      {/* New div added as requested */}
+      <div className="bg-blue-100 p-4 text-blue-800 text-center font-medium border-b border-blue-200">
+        Welcome to the Student Calendar Dashboard
+      </div>
       {/* Header - Fixed the spacing and layout */}
       <header className="border-b p-4 bg-card shadow-sm">
         <div className="container mx-auto flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:justify-between lg:items-center">
@@ -190,21 +193,36 @@ export default function Home() {
 
           {/* Date navigation section - improved spacing */}
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="outline" size="sm" onClick={handleToday} className="px-4">
-              Today
-            </Button>
             <div className="flex items-center">
-              <Button variant="ghost" size="icon" onClick={handlePrevious} className="rounded-r-none">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrevious}
+                className="rounded-r-none"
+              >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <div className="px-3 py-1 border-y text-sm font-medium min-w-40 text-center">
-                {formatDateRange()}
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleNext} className="rounded-l-none">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleToday}
+                className="px-4 rounded-none border-x-0"
+              >
+                Today
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNext}
+                className="rounded-l-none"
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-            
+            <div className="px-3 py-1 border text-sm font-medium min-w-40 text-center rounded-md">
+              {formatDateRange()}
+            </div>
+
             {/* Improved tab spacing */}
             <Tabs
               value={currentView}
@@ -212,9 +230,15 @@ export default function Home() {
               className="ml-2"
             >
               <TabsList className="grid grid-cols-3 w-48">
-                <TabsTrigger value="day" className="px-4">Day</TabsTrigger>
-                <TabsTrigger value="week" className="px-4">Week</TabsTrigger>
-                <TabsTrigger value="month" className="px-4">Month</TabsTrigger>
+                <TabsTrigger value="day" className="px-4">
+                  Day
+                </TabsTrigger>
+                <TabsTrigger value="week" className="px-4">
+                  Week
+                </TabsTrigger>
+                <TabsTrigger value="month" className="px-4">
+                  Month
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -239,22 +263,27 @@ export default function Home() {
             currentDate={currentDate}
             events={events}
             onEventClick={handleEventClick}
+            onDateClick={(date) => setCurrentDate(date)}
           />
         </div>
 
         {/* Resizable divider */}
-        <div 
+        <div
           className="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize active:bg-blue-600 transition-colors"
           onMouseDown={startResizing}
         />
 
         {/* Sidebar with resizable width */}
-        <div 
+        <div
           ref={sidebarRef}
-          className="hidden md:block overflow-auto bg-card shadow-sm"
+          className="hidden md:block overflow-auto bg-card shadow-sm border-l"
           style={{ width: `${sidebarWidth}px` }}
         >
-          <DeadlineSidebar events={events} onEventClick={handleEventClick} />
+          <CalendarRightSidebar
+            events={events}
+            onEventClick={handleEventClick}
+            onCreateEvent={handleCreateEvent}
+          />
         </div>
       </div>
 

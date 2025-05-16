@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   format,
   startOfWeek,
@@ -7,13 +7,8 @@ import {
   endOfMonth,
   isSameMonth,
   isSameDay,
-  addMonths,
-  subMonths,
 } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
 import EventItem from "./EventItem";
 
 interface Event {
@@ -27,6 +22,8 @@ interface Event {
 }
 
 interface CalendarGridProps {
+  view: "day" | "week" | "month";
+  currentDate: Date;
   events?: Event[];
   onEventClick?: (event: Event) => void;
   onDateClick?: (date: Date) => void;
@@ -34,14 +31,13 @@ interface CalendarGridProps {
 }
 
 const CalendarGrid = ({
+  view = "month",
+  currentDate = new Date(),
   events = [],
   onEventClick = () => {},
   onDateClick = () => {},
   onEventDrop = () => {},
 }: CalendarGridProps) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [activeView, setActiveView] = useState("month");
-
   // Sample events for demonstration
   const sampleEvents: Event[] = [
     {
@@ -74,31 +70,6 @@ const CalendarGrid = ({
   ];
 
   const allEvents = events.length > 0 ? events : sampleEvents;
-
-  const nextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
-  };
-
-  const prevMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
-  };
-
-  const renderHeader = () => {
-    const dateFormat = "MMMM yyyy";
-    return (
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">{format(currentDate, dateFormat)}</h2>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="icon" onClick={prevMonth}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={nextMonth}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    );
-  };
 
   const renderDays = () => {
     const dateFormat = "EEE";
@@ -330,24 +301,15 @@ const CalendarGrid = ({
 
   return (
     <Card className="p-4 bg-background w-full h-full overflow-auto">
-      {renderHeader()}
-      <Tabs value={activeView} onValueChange={setActiveView} className="mb-4">
-        <TabsList>
-          <TabsTrigger value="day">Day</TabsTrigger>
-          <TabsTrigger value="week">Week</TabsTrigger>
-          <TabsTrigger value="month">Month</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       <div className="overflow-auto">
-        {activeView === "month" && (
+        {view === "month" && (
           <>
             {renderDays()}
             {renderCells()}
           </>
         )}
-        {activeView === "week" && renderWeekView()}
-        {activeView === "day" && renderDayView()}
+        {view === "week" && renderWeekView()}
+        {view === "day" && renderDayView()}
       </div>
     </Card>
   );
