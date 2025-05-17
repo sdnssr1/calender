@@ -1,14 +1,14 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
+  BarChart2,
   Calendar,
   CheckSquare,
-  BarChart2,
   Clock,
   MessageSquare,
-  User,
   Settings,
+  User,
 } from "lucide-react";
+import { useState } from "react";
 
 export default function VerticalNavSidebar() {
   const [activeTab, setActiveTab] = useState("calendar");
@@ -24,7 +24,7 @@ export default function VerticalNavSidebar() {
   ];
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-16 z-50 bg-white border-r shadow-sm flex flex-col items-center justify-between py-4">
+    <aside className="fixed top-[144px] left-0 h-[calc(100vh-144px)] w-16 z-50 bg-white border-r shadow-sm flex flex-col items-center justify-between py-4">
       <div className="flex flex-col items-center space-y-1">
         {/* App logo */}
         <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold mb-4">

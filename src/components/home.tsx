@@ -1,5 +1,12 @@
+import {
+  addDays,
+  endOfWeek,
+  format,
+  startOfWeek,
+  subDays
+} from "date-fns";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { Event } from "../types/events";
 import CalendarGrid from "./CalendarGrid";
 import CalendarRightSidebar from "./CalendarRightSidebar";
@@ -7,15 +14,6 @@ import EventModal from "./EventModal";
 import { Button } from "./ui/button";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import VerticalNavSidebar from "./VerticalNavSidebar";
-import {
-  format,
-  addDays,
-  subDays,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
 
 type ViewType = "day" | "week" | "month";
 
@@ -83,7 +81,7 @@ export default function Home() {
       <VerticalNavSidebar />
 
       {/* Main content wrapper */}
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 pl-16">
         {/* Welcome Banner */}
         <div className="bg-blue-100 p-4 text-blue-800 text-center font-medium border-b border-blue-200">
           Welcome to the Student Calendar Dashboard
@@ -157,9 +155,9 @@ export default function Home() {
         </header>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex mt-4">
           {/* Main Calendar Area */}
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto px-4">
             <CalendarGrid
               view={currentView}
               currentDate={currentDate}
@@ -170,7 +168,7 @@ export default function Home() {
           </div>
 
           {/* Right Sidebar - Fixed width, always visible */}
-          <aside className="w-[320px] flex-shrink-0 border-l border-gray-200 bg-white shadow-lg">
+          <aside className="w-[320px] flex-shrink-0 border-l border-gray-200 bg-white">
             <CalendarRightSidebar
               events={events}
               onEventClick={handleEventClick}
